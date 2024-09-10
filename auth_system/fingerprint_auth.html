@@ -1,0 +1,65 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fingerprint Authentication</title>
+</head>
+<body>
+    <h1>Fingerprint Authentication</h1>
+    <button id="authenticate">Authenticate with Fingerprint</button>
+
+    <script>
+        document.getElementById('authenticate').addEventListener('click', async () => {
+            if (!window.PublicKeyCredential) {
+                alert("WebAuthn is not supported by your browser.");
+                return;
+            }
+
+            try {
+                const credential = await navigator.credentials.get({
+                    publicKey: {
+                        // Challenge and other parameters should be provided by your server
+                        challenge: new Uint8Array([/* Server-provided challenge */]),
+                        allowCredentials: [{
+                            type: 'public-key',
+                            id: new Uint8Array([/* User's credential ID from registration */]),
+                        }],
+                    }
+                });
+                
+                // Send the credential response to your server for verification
+                console.log(credential);
+            } catch (error) {
+                console.error("Authentication failed:", error);
+            }
+        });
+    </script>
+    
+    <h1>Fingerprint Authentication</h1>
+    <button id="register">Register Fingerprint</button>
+
+    <script>
+        document.getElementById('register').addEventListener('click', async () => {
+            const response = await fetch('fingerprint_auth.php', { method: 'POST' });
+            const options = await response.json();
+
+            const publicKeyCredentialCreationOptions = {
+                ...options,
+                challenge: Uint8Array.from(atob(options.challenge), c => c.charCodeAt(0)),
+                user: {
+                    ...options.user,
+                    id: Uint8Array.from(atob(options.user.id), c => c.charCodeAt(0))
+                }
+            };
+
+            const credential = await navigator.credentials.create({
+                publicKey: publicKeyCredentialCreationOptions
+            });
+
+            console.log(credential);
+        });
+    </script>
+</body>
+</html>
+
+
